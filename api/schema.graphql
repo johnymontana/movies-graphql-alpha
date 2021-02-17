@@ -1,0 +1,32 @@
+type Movie {
+  movieId: ID!
+  title: String
+  year: Int
+  plot: String
+  poster: String
+  imdbRating: Float
+  genres: [Genre] @relationship(type: "IN_GENRE", direction: "OUT")
+  actors: [Actor] @relationship(type: "ACTED_IN", direction: "IN")
+}
+type Genre {
+  name: String
+  movies: [Movie] @relationship(type: "IN_GENRE", direction: "IN")
+}
+type Actor {
+  id: ID!
+  name: String
+  movies: [Movie] @relationship(type: "ACTED_IN", direction: "OUT")
+}
+type User {
+  userId: ID!
+  name: String
+  rated: [Movie] @relationship(type: "RATED", direction: "OUT")
+  recommendedMovies: [Movie]
+    @cypher(
+      statement: """
+      MATCH (this)-[:RATED]->(:Movie)<-[:RATED]-(:User)-[:RATED]->(rec:Movie)
+      WITH rec, COUNT(*) AS score ORDER BY score DESC LIMIT 10
+      RETURN rec
+      """
+    )
+}
